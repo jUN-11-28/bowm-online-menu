@@ -35,6 +35,164 @@ interface SortableRowProps {
   updatingSortOrder: number | null;
 }
 
+// 모바일용 카드 컴포넌트
+function SortableCard({
+  menu,
+  onEdit,
+  onDelete,
+  deletingId,
+  sortOrderInputs,
+  onSortOrderInputChange,
+  onSortOrderBlur,
+  updatingSortOrder,
+}: SortableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: menu.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="border-b border-gray-200 bg-white p-4 md:hidden"
+    >
+      <div className="flex items-start gap-3">
+        {/* 드래그 핸들 */}
+        <div
+          {...listeners}
+          className="mt-1 cursor-grab active:cursor-grabbing text-gray-400 select-none"
+        >
+          <span aria-label="드래그">⋮⋮</span>
+        </div>
+
+        {/* 이미지 */}
+        <div className="shrink-0">
+          {menu.image_url ? (
+            <div className="relative h-16 w-16 overflow-hidden rounded-md border border-gray-200">
+              <Image
+                src={menu.image_url}
+                alt={menu.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 text-[10px] text-gray-400">
+              이미지 없음
+            </div>
+          )}
+        </div>
+
+        {/* 메뉴 정보 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-gray-900 truncate">
+                {menu.name}
+              </h3>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-gray-600">{menu.category}</span>
+                <span className="text-xs font-medium text-gray-900">
+                  {menu.price.toLocaleString()}원
+                </span>
+              </div>
+            </div>
+
+            {/* 순서 입력 */}
+            <input
+              type="number"
+              min={1}
+              value={
+                sortOrderInputs[menu.id] !== undefined
+                  ? sortOrderInputs[menu.id]
+                  : menu.sort_order ?? 0
+              }
+              onChange={(e) => {
+                const newOrder = parseInt(e.target.value, 10);
+                if (!isNaN(newOrder)) {
+                  onSortOrderInputChange(menu.id, newOrder);
+                }
+              }}
+              onBlur={(e) => {
+                const newOrder = parseInt(e.target.value, 10);
+                if (!isNaN(newOrder) && newOrder >= 1) {
+                  onSortOrderBlur(menu.id, newOrder);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+              }}
+              disabled={updatingSortOrder === menu.id}
+              className="w-14 rounded-md border border-gray-300 px-1.5 py-1 text-center text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </div>
+
+          {/* 뱃지들 */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {menu.is_sold_out && (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                품절
+              </span>
+            )}
+            {menu.is_seasonal && (
+              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                시즌
+              </span>
+            )}
+            {menu.is_signature && (
+              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                시그니처
+              </span>
+            )}
+            {menu.is_visible ? (
+              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                표시
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                숨김
+              </span>
+            )}
+          </div>
+
+          {/* 액션 버튼 */}
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => onEdit(menu)}
+              className="flex-1 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100"
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(menu.id)}
+              disabled={deletingId === menu.id}
+              className="flex-1 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {deletingId === menu.id ? "삭제 중..." : "삭제"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SortableRow({
   menu,
   onEdit,
@@ -719,11 +877,13 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <header className="mb-8 flex items-center justify-between">
+      <div className="mx-auto max-w-5xl px-4 py-4 md:px-4 md:py-8">
+        <header className="mb-4 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">메뉴 관리</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-xl font-bold text-gray-900 md:text-2xl">
+              메뉴 관리
+            </h1>
+            <p className="mt-1 text-xs text-gray-500 md:text-sm">
               메뉴를 추가·수정·삭제할 수 있는 관리자 페이지입니다.
             </p>
           </div>
@@ -737,7 +897,7 @@ export default function AdminPage() {
               }
               setIsModalOpen(true);
             }}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:w-auto"
           >
             메뉴 추가
           </button>
@@ -750,13 +910,13 @@ export default function AdminPage() {
         )}
 
         {/* 카테고리 필터 */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {["전체", ...CATEGORIES].map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors md:px-4 md:py-2 md:text-sm ${
                 selectedCategory === cat
                   ? "bg-blue-600 text-white"
                   : "bg-white text-gray-700 hover:bg-gray-100"
@@ -768,8 +928,10 @@ export default function AdminPage() {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-gray-700">메뉴 목록</h2>
+          <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 md:px-4 md:py-3">
+            <h2 className="text-xs font-semibold text-gray-700 md:text-sm">
+              메뉴 목록
+            </h2>
             <button
               type="button"
               onClick={fetchMenus}
@@ -790,51 +952,77 @@ export default function AdminPage() {
                 : `${selectedCategory} 카테고리에 등록된 메뉴가 없습니다.`}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredMenus.map((m) => m.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        순서
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                        이미지
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                        이름
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                        카테고리
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                        가격
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        품절
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        시즌
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        시그니처
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        화면 표시
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                        액션
-                      </th>
-                    </tr>
-                  </thead>
-                  <SortableContext
-                    items={filteredMenus.map((m) => m.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
+                {/* 모바일 카드 뷰 */}
+                <div className="md:hidden">
+                  {filteredMenus.map((menu) => (
+                    <SortableCard
+                      key={menu.id}
+                      menu={menu}
+                      onEdit={(menu) => {
+                        fillEditForm(menu);
+                        setIsEditModalOpen(true);
+                      }}
+                      onDelete={handleDelete}
+                      deletingId={deletingId}
+                      sortOrderInputs={sortOrderInputs}
+                      onSortOrderInputChange={(menuId, value) => {
+                        setSortOrderInputs((prev) => ({
+                          ...prev,
+                          [menuId]: value,
+                        }));
+                      }}
+                      onSortOrderBlur={handleSortOrderChange}
+                      updatingSortOrder={updatingSortOrder}
+                    />
+                  ))}
+                </div>
+
+                {/* 데스크톱 테이블 뷰 */}
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          순서
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          이미지
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          이름
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                          카테고리
+                        </th>
+                        <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                          가격
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          품절
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          시즌
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          시그니처
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          화면 표시
+                        </th>
+                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                          액션
+                        </th>
+                      </tr>
+                    </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {filteredMenus.map((menu) => (
                         <SortableRow
@@ -858,18 +1046,18 @@ export default function AdminPage() {
                         />
                       ))}
                     </tbody>
-                  </SortableContext>
-                </table>
-              </DndContext>
-            </div>
+                  </table>
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>
 
       {/* 수정 모달 */}
       {isEditModalOpen && editingMenu && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center md:p-0">
+          <div className="w-full max-w-md rounded-t-lg bg-white p-4 shadow-xl md:rounded-lg md:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">메뉴 수정</h2>
               <button
@@ -1048,8 +1236,8 @@ export default function AdminPage() {
 
       {/* 추가 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center md:p-0">
+          <div className="w-full max-w-md rounded-t-lg bg-white p-4 shadow-xl md:rounded-lg md:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">메뉴 추가</h2>
               <button
