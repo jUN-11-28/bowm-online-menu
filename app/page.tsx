@@ -152,11 +152,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 중간 컬럼: Coffee & Tea Zone */}
-        <div className="flex h-full flex-col gap-[2vh] overflow-hidden">
+        {/* [중간 컬럼] Coffee & Tea Zone */}
+        <div className="flex h-full flex-col gap-[3vh]">
+          {" "}
+          {/* 섹션 간 간격 넉넉하게 */}
           {/* Coffee 섹션 */}
-          <div className="flex min-h-0 flex-[1.2] flex-col">
-            <div className="mb-[1.2vh] flex-shrink-0">
+          <div className="flex flex-col shrink-0">
+            <div className="mb-[1.2vh]">
               <h2 className="text-[2.8vh] font-bold text-gray-900">
                 <span className="italic">COFFEE</span> /{" "}
                 <span className="not-italic">커피</span>
@@ -165,38 +167,33 @@ export default function Home() {
                 샷 추가 / 디카페인 +1000
               </p>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+            <div className="flex flex-col gap-[0.2vh]">
               {coffeeMenus.length === 0 ? (
                 <div className="text-[2vh] text-gray-400">
                   커피 메뉴가 없습니다.
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
-                  {coffeeMenus.map((menu) => (
-                    <SimpleMenuItem key={menu.id} menu={menu} />
-                  ))}
-                </div>
+                coffeeMenus.map((menu) => (
+                  <SimpleMenuItem key={menu.id} menu={menu} />
+                ))
               )}
             </div>
           </div>
-
-          {/* Tea 섹션 */}
-          <div className="flex min-h-0 flex-1 flex-col mt-[2.5vh]">
-            <h2 className="mb-[1.2vh] flex-shrink-0 text-[2.8vh] font-bold text-gray-900">
+          {/* Tea 섹션 (Coffee 아래에 자연스럽게 위치) */}
+          <div className="flex flex-col shrink-0">
+            <h2 className="mb-[1.2vh] text-[2.8vh] font-bold text-gray-900">
               <span className="italic">TEA</span> /{" "}
               <span className="not-italic">차</span>
             </h2>
-            <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+            <div className="flex flex-col gap-[0.2vh]">
               {teaMenus.length === 0 ? (
                 <div className="text-[2vh] text-gray-400">
                   차 메뉴가 없습니다.
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
-                  {teaMenus.map((menu) => (
-                    <TeaMenuItem key={menu.id} menu={menu} />
-                  ))}
-                </div>
+                teaMenus.map((menu) => (
+                  <TeaMenuItem key={menu.id} menu={menu} />
+                ))
               )}
             </div>
           </div>
@@ -205,8 +202,9 @@ export default function Home() {
         {/* 오른쪽 컬럼: Beverage, Smoothie */}
         <div className="flex h-full flex-col gap-[2vh] overflow-hidden">
           {/* Beverage 섹션 */}
-          <div className="flex min-h-0 flex-[1.2] flex-col">
-            <div className="mb-[1.2vh] flex-shrink-0">
+          {/* 수정: flex-[1.2]와 min-h-0 제거 -> flex-shrink-0 추가 (줄어들지 않게) */}
+          <div className="flex flex-col flex-shrink-0">
+            <div className="mb-[1.2vh]">
               <h2 className="text-[2.8vh] font-bold text-gray-900">
                 <span className="italic">BEVERAGE</span> /{" "}
                 <span className="not-italic">음료</span>
@@ -215,13 +213,13 @@ export default function Home() {
                 샷 추가 / 디카페인 +1000
               </div>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+            <div className="flex flex-col gap-[0.2vh]">
               {beverageMenus.length === 0 ? (
                 <div className="text-[2vh] text-gray-400">
                   음료 메뉴가 없습니다.
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+                <div className="flex flex-col gap-[0.2vh]">
                   {beverageMenus.map((menu) => (
                     <SimpleMenuItem key={menu.id} menu={menu} />
                   ))}
@@ -231,21 +229,22 @@ export default function Home() {
           </div>
 
           {/* Smoothie 섹션 */}
-          <div className="flex min-h-0 flex-1 flex-col mt-[2.5vh]">
-            <div className="mb-[1.2vh] flex-shrink-0">
+          {/* 수정: flex-1과 min-h-0 제거 -> 그냥 자연스럽게 아래에 붙도록 */}
+          <div className="flex flex-col flex-shrink-0">
+            <div className="mb-[1.2vh]">
               <h2 className="text-[2.8vh] font-bold text-gray-900">
                 <span className="italic">SMOOTHIE</span> /{" "}
                 <span className="not-italic">스무디</span>
               </h2>
               <p className="mt-[0.3vh] text-[1.8vh] text-gray-500">only iced</p>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+            <div className="flex flex-col gap-[0.2vh]">
               {smoothieMenus.length === 0 ? (
                 <div className="text-[2vh] text-gray-400">
                   스무디 메뉴가 없습니다.
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-[0.4vh] overflow-visible">
+                <div className="flex flex-col gap-[0.2vh]">
                   {smoothieMenus.map((menu) => (
                     <SimpleMenuItem key={menu.id} menu={menu} />
                   ))}
@@ -271,7 +270,7 @@ export default function Home() {
 function SimpleMenuItem({ menu }: { menu: Menu }) {
   return (
     <div
-      className={`flex items-center justify-between py-[0.4vh] ${
+      className={`flex items-center justify-between py-[0.2vh] ${
         menu.is_sold_out ? "opacity-50" : ""
       }`}
     >
@@ -301,7 +300,7 @@ function SimpleMenuItem({ menu }: { menu: Menu }) {
 function TeaMenuItem({ menu }: { menu: Menu }) {
   return (
     <div
-      className={`flex flex-col gap-[0.3vh] py-[0.4vh] ${
+      className={`flex flex-col gap-[0.2vh] py-[0.2vh] ${
         menu.is_sold_out ? "opacity-50" : ""
       }`}
     >
