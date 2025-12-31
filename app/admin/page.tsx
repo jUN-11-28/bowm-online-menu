@@ -35,46 +35,79 @@ interface SortableRowProps {
   updatingSortOrder: number | null;
 }
 
-// 모바일용 카드 컴포넌트
-function SortableCard({
+interface MobileCardProps {
+  menu: Menu;
+  onEdit: (menu: Menu) => void;
+  onDelete: (id: number) => void;
+  deletingId: number | null;
+  onMoveUp: (menuId: number) => void;
+  onMoveDown: (menuId: number) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  isMoving: boolean;
+}
+
+// 모바일용 카드 컴포넌트 (드래그앤드롭 없음, 위/아래 버튼 사용)
+function MobileCard({
   menu,
   onEdit,
   onDelete,
   deletingId,
-  sortOrderInputs,
-  onSortOrderInputChange,
-  onSortOrderBlur,
-  updatingSortOrder,
-}: SortableRowProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: menu.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+  isMoving,
+}: MobileCardProps) {
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className="border-b border-gray-200 bg-white p-4 md:hidden"
-    >
+    <div className="border-b border-gray-200 bg-white p-4 md:hidden">
       <div className="flex items-start gap-3">
-        {/* 드래그 핸들 */}
-        <div
-          {...listeners}
-          className="mt-1 cursor-grab active:cursor-grabbing text-gray-400 select-none"
-        >
-          <span aria-label="드래그">⋮⋮</span>
+        {/* 순서 변경 버튼 (위/아래) */}
+        <div className="mt-1 flex shrink-0 flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => onMoveUp(menu.id)}
+            disabled={!canMoveUp || isMoving}
+            className="flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="위로 이동"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-4 w-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 15.75l7.5-7.5 7.5 7.5"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => onMoveDown(menu.id)}
+            disabled={!canMoveDown || isMoving}
+            className="flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="아래로 이동"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-4 w-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* 이미지 */}
@@ -109,36 +142,6 @@ function SortableCard({
                 </span>
               </div>
             </div>
-
-            {/* 순서 입력 */}
-            <input
-              type="number"
-              min={1}
-              value={
-                sortOrderInputs[menu.id] !== undefined
-                  ? sortOrderInputs[menu.id]
-                  : menu.sort_order ?? 0
-              }
-              onChange={(e) => {
-                const newOrder = parseInt(e.target.value, 10);
-                if (!isNaN(newOrder)) {
-                  onSortOrderInputChange(menu.id, newOrder);
-                }
-              }}
-              onBlur={(e) => {
-                const newOrder = parseInt(e.target.value, 10);
-                if (!isNaN(newOrder) && newOrder >= 1) {
-                  onSortOrderBlur(menu.id, newOrder);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.currentTarget.blur();
-                }
-              }}
-              disabled={updatingSortOrder === menu.id}
-              className="w-14 rounded-md border border-gray-300 px-1.5 py-1 text-center text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-            />
           </div>
 
           {/* 뱃지들 */}
@@ -371,9 +374,14 @@ export default function AdminPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [movingMenuId, setMovingMenuId] = useState<number | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px 이동해야 드래그 시작 (모바일 터치 개선)
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -774,6 +782,83 @@ export default function AdminPage() {
     setDeletingId(null);
   };
 
+  // 모바일용 위/아래 이동 핸들러
+  const handleMoveUp = async (menuId: number) => {
+    const menu = menus.find((m) => m.id === menuId);
+    if (!menu) return;
+
+    const categoryMenus = filteredMenus.filter(
+      (m) => m.category === menu.category
+    );
+    const currentIndex = categoryMenus.findIndex((m) => m.id === menuId);
+
+    if (currentIndex <= 0) return; // 첫 번째 항목이면 이동 불가
+
+    const prevMenu = categoryMenus[currentIndex - 1];
+    if (!prevMenu) return;
+
+    setMovingMenuId(menuId);
+    setError(null);
+
+    try {
+      // 두 메뉴의 sort_order 교환
+      const tempSortOrder = menu.sort_order;
+      await supabase
+        .from("menus")
+        .update({ sort_order: prevMenu.sort_order })
+        .eq("id", menuId);
+      await supabase
+        .from("menus")
+        .update({ sort_order: tempSortOrder })
+        .eq("id", prevMenu.id);
+
+      await fetchMenus();
+    } catch (err) {
+      console.error(err);
+      setError("순서 변경 중 오류가 발생했습니다.");
+    } finally {
+      setMovingMenuId(null);
+    }
+  };
+
+  const handleMoveDown = async (menuId: number) => {
+    const menu = menus.find((m) => m.id === menuId);
+    if (!menu) return;
+
+    const categoryMenus = filteredMenus.filter(
+      (m) => m.category === menu.category
+    );
+    const currentIndex = categoryMenus.findIndex((m) => m.id === menuId);
+
+    if (currentIndex < 0 || currentIndex >= categoryMenus.length - 1) return; // 마지막 항목이면 이동 불가
+
+    const nextMenu = categoryMenus[currentIndex + 1];
+    if (!nextMenu) return;
+
+    setMovingMenuId(menuId);
+    setError(null);
+
+    try {
+      // 두 메뉴의 sort_order 교환
+      const tempSortOrder = menu.sort_order;
+      await supabase
+        .from("menus")
+        .update({ sort_order: nextMenu.sort_order })
+        .eq("id", menuId);
+      await supabase
+        .from("menus")
+        .update({ sort_order: tempSortOrder })
+        .eq("id", nextMenu.id);
+
+      await fetchMenus();
+    } catch (err) {
+      console.error(err);
+      setError("순서 변경 중 오류가 발생했습니다.");
+    } finally {
+      setMovingMenuId(null);
+    }
+  };
+
   const handleSortOrderChange = async (
     menuId: number,
     newSortOrder: number
@@ -952,19 +1037,23 @@ export default function AdminPage() {
                 : `${selectedCategory} 카테고리에 등록된 메뉴가 없습니다.`}
             </div>
           ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={filteredMenus.map((m) => m.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {/* 모바일 카드 뷰 */}
-                <div className="md:hidden">
-                  {filteredMenus.map((menu) => (
-                    <SortableCard
+            <>
+              {/* 모바일 카드 뷰 (드래그앤드롭 없음) */}
+              <div className="md:hidden max-h-[calc(100vh-280px)] overflow-y-auto">
+                {filteredMenus.map((menu) => {
+                  const categoryMenus = filteredMenus.filter(
+                    (m) => m.category === menu.category
+                  );
+                  const currentIndex = categoryMenus.findIndex(
+                    (m) => m.id === menu.id
+                  );
+                  const canMoveUp = currentIndex > 0;
+                  const canMoveDown =
+                    currentIndex >= 0 &&
+                    currentIndex < categoryMenus.length - 1;
+
+                  return (
+                    <MobileCard
                       key={menu.id}
                       menu={menu}
                       onEdit={(menu) => {
@@ -973,83 +1062,90 @@ export default function AdminPage() {
                       }}
                       onDelete={handleDelete}
                       deletingId={deletingId}
-                      sortOrderInputs={sortOrderInputs}
-                      onSortOrderInputChange={(menuId, value) => {
-                        setSortOrderInputs((prev) => ({
-                          ...prev,
-                          [menuId]: value,
-                        }));
-                      }}
-                      onSortOrderBlur={handleSortOrderChange}
-                      updatingSortOrder={updatingSortOrder}
+                      onMoveUp={handleMoveUp}
+                      onMoveDown={handleMoveDown}
+                      canMoveUp={canMoveUp}
+                      canMoveDown={canMoveDown}
+                      isMoving={movingMenuId === menu.id}
                     />
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
 
-                {/* 데스크톱 테이블 뷰 */}
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          순서
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          이미지
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          이름
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                          카테고리
-                        </th>
-                        <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                          가격
-                        </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          품절
-                        </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          시즌
-                        </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          시그니처
-                        </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          화면 표시
-                        </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-                          액션
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {filteredMenus.map((menu) => (
-                        <SortableRow
-                          key={menu.id}
-                          menu={menu}
-                          onEdit={(menu) => {
-                            fillEditForm(menu);
-                            setIsEditModalOpen(true);
-                          }}
-                          onDelete={handleDelete}
-                          deletingId={deletingId}
-                          sortOrderInputs={sortOrderInputs}
-                          onSortOrderInputChange={(menuId, value) => {
-                            setSortOrderInputs((prev) => ({
-                              ...prev,
-                              [menuId]: value,
-                            }));
-                          }}
-                          onSortOrderBlur={handleSortOrderChange}
-                          updatingSortOrder={updatingSortOrder}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </SortableContext>
-            </DndContext>
+              {/* 데스크톱 테이블 뷰 (드래그앤드롭 있음) */}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={filteredMenus.map((m) => m.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="min-w-full divide-y divide-gray-200 text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            순서
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            이미지
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            이름
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            카테고리
+                          </th>
+                          <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                            가격
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            품절
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            시즌
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            시그니처
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            화면 표시
+                          </th>
+                          <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                            액션
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {filteredMenus.map((menu) => (
+                          <SortableRow
+                            key={menu.id}
+                            menu={menu}
+                            onEdit={(menu) => {
+                              fillEditForm(menu);
+                              setIsEditModalOpen(true);
+                            }}
+                            onDelete={handleDelete}
+                            deletingId={deletingId}
+                            sortOrderInputs={sortOrderInputs}
+                            onSortOrderInputChange={(menuId, value) => {
+                              setSortOrderInputs((prev) => ({
+                                ...prev,
+                                [menuId]: value,
+                              }));
+                            }}
+                            onSortOrderBlur={handleSortOrderChange}
+                            updatingSortOrder={updatingSortOrder}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </>
           )}
         </div>
       </div>
