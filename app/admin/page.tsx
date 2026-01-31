@@ -408,7 +408,7 @@ export default function AdminPage() {
       } = await supabase.auth.getSession();
 
       if (!session) {
-        router.push("/login");
+        router.push("/login?redirect=/admin");
       } else {
         setIsAuthenticated(true);
       }
@@ -421,7 +421,7 @@ export default function AdminPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        router.push("/login");
+        router.push("/login?redirect=/admin");
       } else {
         setIsAuthenticated(true);
       }

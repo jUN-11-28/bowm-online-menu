@@ -22,3 +22,22 @@ export const CATEGORIES = [
   "Smoothie",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
+// 방송 예약 관련 타입
+export type BroadcastType = 'vibration' | 'vehicle' | 'smoking' | 'closing' | 'custom';
+export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+export type ClosingType = 'floor' | 'store';
+
+export interface BroadcastSchedule {
+  id: string;
+  broadcast_type: BroadcastType;
+  days_of_week: DayOfWeek[];
+  hour: number;
+  minute: number;
+  vibration_number?: string;
+  vehicle_number?: string;
+  custom_text?: string;
+  closing_type?: ClosingType;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}

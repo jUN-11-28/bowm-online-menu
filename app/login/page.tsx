@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/admin";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +25,7 @@ export default function LoginPage() {
       if (error) {
         alert("아이디 또는 비밀번호가 틀렸습니다");
       } else {
-        router.push("/admin");
+        router.push(redirectUrl);
       }
     } catch (error) {
       alert("로그인 중 오류가 발생했습니다.");
