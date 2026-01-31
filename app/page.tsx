@@ -74,27 +74,27 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-white font-['Pretendard',sans-serif] px-[3vw] pb-[3vw] pt-[1vw]">
+    <div className="flex min-h-screen w-screen flex-col bg-white font-['Pretendard',sans-serif] px-[6vw] pb-[3vw] pt-[1vw] md:h-screen md:overflow-hidden md:px-[3vw]">
       {/* 상단 헤더 영역 */}
-      <header className="relative flex h-[10vh] flex-col items-center justify-start text-center">
-        <h1 className="mb-0 text-[6vh] text-gray-900">
+      <header className="relative flex flex-col items-center justify-start text-center py-[2vh] md:h-[10vh] md:py-0">
+        <h1 className="mb-0 text-[4vh] md:text-[6vh] text-gray-900">
           <span className="font-bold italic">BOWM</span>{" "}
-          <span className="text-[3.5vh] font-normal">보움</span>
+          <span className="text-[2.5vh] md:text-[3.5vh] font-normal">보움</span>
         </h1>
-        <p className="mt-[-1.5vh] text-[2vh] font-normal tracking-widest text-gray-600">
+        <p className="mt-[-0.5vh] md:mt-[-1.5vh] text-[1.5vh] md:text-[2vh] font-normal tracking-widest text-gray-600">
           Boundary of Water Mass | Bottle of Warm Moment
         </p>
       </header>
 
       {/* 메인 컨텐츠 영역 */}
-      <main className="grid h-[85vh] grid-cols-3 gap-[2vw] mt-[3vh]">
-        {/* 왼쪽 컬럼: Signature Zone */}
-        <div className="flex h-full flex-col gap-[1vh] overflow-hidden">
+      <main className="flex flex-col gap-[4vh] mt-[3vh] md:grid md:h-[85vh] md:grid-cols-3 md:gap-[2vw]">
+        {/* Signature Zone */}
+        <div className="flex flex-col gap-[1vh] md:h-full md:overflow-hidden">
           <h2 className="mb-[1.2vh] flex-shrink-0 text-[2.8vh] font-bold text-gray-900">
             <span className="italic">SIGNATURE</span> /{" "}
             <span className="not-italic">대표</span>
           </h2>
-          <div className="flex min-h-0 flex-1 flex-col overflow-visible">
+          <div className="flex flex-col md:min-h-0 md:flex-1 md:overflow-visible">
             {signatureMenus.length === 0 ? (
               <div className="text-[2vh] text-gray-400">
                 시그니처 메뉴가 없습니다.
@@ -109,7 +109,7 @@ export default function Home() {
                   >
                     {/* 이미지 영역 */}
                     {menu.image_url && (
-                      <div className="relative aspect-square w-[9vw] flex-shrink-0 overflow-hidden rounded">
+                      <div className="relative aspect-square w-[20vw] md:w-[9vw] flex-shrink-0 overflow-hidden rounded">
                         <Image
                           src={menu.image_url}
                           alt={menu.name}
@@ -152,8 +152,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* [중간 컬럼] Coffee & Tea Zone */}
-        <div className="flex h-full flex-col gap-[3vh]">
+        {/* Coffee & Tea Zone */}
+        <div className="flex flex-col gap-[3vh] md:h-full">
           {" "}
           {/* 섹션 간 간격 넉넉하게 */}
           {/* Coffee 섹션 */}
@@ -199,8 +199,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 오른쪽 컬럼: Beverage, Smoothie */}
-        <div className="flex h-full flex-col gap-[2vh] overflow-hidden">
+        {/* Beverage & Smoothie Zone */}
+        <div className="flex flex-col gap-[2vh] md:h-full md:overflow-hidden">
           {/* Beverage 섹션 */}
           {/* 수정: flex-[1.2]와 min-h-0 제거 -> flex-shrink-0 추가 (줄어들지 않게) */}
           <div className="flex flex-col flex-shrink-0">
@@ -256,8 +256,8 @@ export default function Home() {
       </main>
 
       {/* 하단 푸터 영역 */}
-      <footer className="flex h-[5vh] items-center justify-center border-t border-gray-200">
-        <p className="text-[2vh] leading-relaxed text-gray-500">
+      <footer className="flex items-center justify-center border-t border-gray-200 py-[2vh] mt-[4vh] md:h-[5vh] md:mt-0 md:py-0">
+        <p className="text-[1.5vh] md:text-[2vh] leading-relaxed text-gray-500 text-center px-[2vw]">
           다른 성질의 바닷물이 만나는 동해바다에 영감을 받아 새로운 만남과
           공간이 조화를 이루기를 바랍니다.
         </p>
