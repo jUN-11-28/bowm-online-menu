@@ -46,6 +46,7 @@ export default function BroadcastPage() {
   // 예약 관련 상태
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [schedules, setSchedules] = useState<BroadcastSchedule[]>([]);
+  const [lastExecutedScheduleId, setLastExecutedScheduleId] = useState<string | null>(null);
   const [scheduleForm, setScheduleForm] = useState({
     broadcastType: 'vibration' as BroadcastType,
     selectedDays: new Set<DayOfWeek>(['MON']),
