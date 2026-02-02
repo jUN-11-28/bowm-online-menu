@@ -124,6 +124,11 @@ export default function Home() {
                         <h3 className="text-[2.2vh] font-bold text-gray-900">
                           {menu.name}
                         </h3>
+                        {menu.is_seasonal && (
+                          <span className="rounded-full bg-emerald-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
+                            SEASON
+                          </span>
+                        )}
                         {menu.is_sold_out && (
                           <span className="rounded-full bg-red-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
                             SOLD OUT
@@ -275,17 +280,24 @@ function SimpleMenuItem({ menu }: { menu: Menu }) {
       }`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-[1vw]">
-        <span className="text-[2.2vh] font-medium text-gray-900">
-          {menu.name}
-        </span>
+        <div className="flex min-w-0 items-center gap-[0.6vw]">
+          <span className="text-[2.2vh] font-medium text-gray-900">
+            {menu.name}
+          </span>
+          {menu.is_seasonal && (
+            <span className="flex-shrink-0 rounded-full bg-emerald-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
+              SEASON
+            </span>
+          )}
+          {menu.is_sold_out && (
+            <span className="flex-shrink-0 rounded-full bg-red-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
+              SOLD OUT
+            </span>
+          )}
+        </div>
         {menu.description && (
           <span className="text-[1.8vh] text-gray-500">
             ({menu.description})
-          </span>
-        )}
-        {menu.is_sold_out && (
-          <span className="flex-shrink-0 rounded-full bg-red-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
-            SOLD OUT
           </span>
         )}
       </div>
@@ -305,14 +317,21 @@ function TeaMenuItem({ menu }: { menu: Menu }) {
       }`}
     >
       <div className="flex items-center justify-between gap-[1vw]">
-        <span className="text-[2.2vh] font-medium text-gray-900">
-          {menu.name}
-        </span>
-        {menu.is_sold_out && (
-          <span className="flex-shrink-0 rounded-full bg-red-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
-            SOLD OUT
+        <div className="flex items-center gap-[0.6vw]">
+          <span className="text-[2.2vh] font-medium text-gray-900">
+            {menu.name}
           </span>
-        )}
+          {menu.is_seasonal && (
+            <span className="flex-shrink-0 rounded-full bg-emerald-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
+              SEASON
+            </span>
+          )}
+          {menu.is_sold_out && (
+            <span className="flex-shrink-0 rounded-full bg-red-500 px-[0.8vw] py-[0.3vh] text-[1.2vh] font-bold text-white">
+              SOLD OUT
+            </span>
+          )}
+        </div>
         <span className="flex-shrink-0 text-[2vh] font-normal text-gray-900">
           {(menu.price / 1000).toFixed(1)}
         </span>
